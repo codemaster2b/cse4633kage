@@ -22,10 +22,20 @@ class Engine:
         self.board[self.playerTwoKing[0]][self.playerTwoKing[1]] = 2
     
     def validate(self, move):
-        if type(move) == type([]) and len(move) == 3 and type(move[1]) == type(1) and type(move[2]) == type(1):
-            return True
-        else:
+        if type(move) != type([]) or len(move) != 3 or type(move[1]) != type(1) or type(move[2]) != type(1):
+            return False        
+        elif move[0] == "W" and self.board[move[1]][move[2]] > 0:
             return False
+        elif move[0] == "K" and self.isPlayerOne and abs(self.playerOneKing[0] - move[1]) + abs(self.playerOneKing[1] - move[2]) != 2:
+            return False
+        elif move[0] == "K" and not self.isPlayerOne and abs(self.playerTwoKing[0] - move[1]) + abs(self.playerTwoKing[1] - move[2]) != 2:
+            return False
+        elif move[0] == "K" and self.isPlayerOne and move[1] == self.playerTwoKing[0] and move[2] == self.playerTwoKing[1]:
+            return False
+        elif move[0] == "K" and not self.isPlayerOne and move[1] == self.playerOneKing[0] and move[2] == self.playerOneKing[1]:
+            return False
+        else:
+            return True
     
     def make_move(self, move):
         if self.validate(move):
