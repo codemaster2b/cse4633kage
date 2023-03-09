@@ -129,21 +129,24 @@ class MainWindow(QMainWindow):
     def get_move(self, moveString):
         text = moveString.replace("(","").replace(")","").replace("'","").replace(" ","")
         split = text.split(",")
-        split[1] = int(split[1])
-        split[2] = int(split[2])
-        return split
+        if len(split) == 3:
+            split[1] = int(split[1])
+            split[2] = int(split[2])
+            return split
+        else:
+            return ("N",0,0)
 
     def log_text(self, text):
         self.movesText.append(text)
 
     def playerOneConfirmButton_clicked(self):
-        if self.engine.isPlayerOne:
+        if self.engine.winner == 0 and self.engine.isPlayerOne:
             move = self.get_move(self.playerOneMoveLabel.text())
             self.engine.make_move(move)
             self.refresh()
 
     def playerTwoConfirmButton_clicked(self):
-        if not self.engine.isPlayerOne:
+        if self.engine.winner == 0 and not self.engine.isPlayerOne:
             move = self.get_move(self.playerTwoMoveLabel.text())
             self.engine.make_move(move)
             self.refresh()
@@ -180,12 +183,16 @@ class MainWindow(QMainWindow):
                     self.boardLayout.addWidget(w, y, x)
 
     def refresh(self):
-        if self.engine.isPlayerOne:
+        if self.engine.winner > 0:
+            self.log_text("Player " + str(self.engine.winner) + " won!")
+            self.playerOneBox.setStyleSheet("none")
+            self.playerTwoBox.setStyleSheet("none")
+        elif self.engine.isPlayerOne:
             self.playerOneBox.setStyleSheet("font-weight: bold")
             self.playerTwoBox.setStyleSheet("none")
         else:
-            self.playerTwoBox.setStyleSheet("font-weight: bold")
             self.playerOneBox.setStyleSheet("none")
+            self.playerTwoBox.setStyleSheet("font-weight: bold")
 
         for x in range(self.engine.boardColumns):
             for y in range(self.engine.boardRows):
