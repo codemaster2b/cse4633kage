@@ -4,15 +4,20 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
-import math
 import engine
+import simpleAgent
 
 class MainWindow(QMainWindow):
+
+    agents = ["Manual","Simple"]
 
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
         self.engine = engine.Engine()
+
+        self.playerOneAgent = None
+        self.playerTwoAgent = None
 
         self.playerOneBox = QGroupBox("Player 1")
         self.playerOneBox.width = 300
@@ -20,12 +25,13 @@ class MainWindow(QMainWindow):
         playerOneBoxLayout = QGridLayout()
         self.playerOneBox.setLayout(playerOneBoxLayout)
 
-        playerOneAI = QComboBox()
-        playerOneAI.addItem("Manual")
-        playerOneAI.addItem("Scripted")
-        playerOneAI.setCurrentIndex(0)
+        self.playerOneAI = QComboBox()
+        for agent in self.agents:
+            self.playerOneAI.addItem(agent)
+        self.playerOneAI.setCurrentIndex(0)
+        self.playerOneAI.currentIndexChanged.connect(self.playerOneAI_currentIndexChanged)
         playerOneBoxLayout.addWidget(QLabel("AI"),0,0)
-        playerOneBoxLayout.addWidget(playerOneAI,0,1)
+        playerOneBoxLayout.addWidget(self.playerOneAI,0,1)
 
         self.playerOneMoveLabel = QLabel()
         playerOneBoxLayout.addWidget(QLabel("MOVE"),1,0)
@@ -46,12 +52,13 @@ class MainWindow(QMainWindow):
         playerTwoBoxLayout = QGridLayout()
         self.playerTwoBox.setLayout(playerTwoBoxLayout)
 
-        playerTwoAI = QComboBox()
-        playerTwoAI.addItem("Manual")
-        playerTwoAI.addItem("Scripted")
-        playerTwoAI.setCurrentIndex(0)
+        self.playerTwoAI = QComboBox()
+        for agent in self.agents:
+            self.playerTwoAI.addItem(agent)
+        self.playerTwoAI.setCurrentIndex(0)
+        self.playerTwoAI.currentIndexChanged.connect(self.playerTwoAI_currentIndexChanged)
         playerTwoBoxLayout.addWidget(QLabel("AI"),0,0)
-        playerTwoBoxLayout.addWidget(playerTwoAI,0,1)
+        playerTwoBoxLayout.addWidget(self.playerTwoAI,0,1)
 
         self.playerTwoMoveLabel = QLabel()
         playerTwoBoxLayout.addWidget(QLabel("MOVE"),1,0)
@@ -122,47 +129,6 @@ class MainWindow(QMainWindow):
         cw.setLayout(layout)
         self.setCentralWidget(cw)
 
-        self.init_map()
-        self.refresh()
-        self.show()
-
-    def get_move(self, moveString):
-        text = moveString.replace("(","").replace(")","").replace("'","").replace(" ","")
-        split = text.split(",")
-        if len(split) == 3:
-            split[1] = int(split[1])
-            split[2] = int(split[2])
-            return split
-        else:
-            return ("N",0,0)
-
-    def log_text(self, text):
-        self.movesText.append(text)
-
-    def playerOneConfirmButton_clicked(self):
-        if self.engine.winner == 0 and self.engine.isPlayerOne:
-            move = self.get_move(self.playerOneMoveLabel.text())
-            self.engine.make_move(move)
-            self.refresh()
-
-    def playerTwoConfirmButton_clicked(self):
-        if self.engine.winner == 0 and not self.engine.isPlayerOne:
-            move = self.get_move(self.playerTwoMoveLabel.text())
-            self.engine.make_move(move)
-            self.refresh()
-
-    def set_player_move(self, moveString):
-        move = self.get_move(moveString)
-        valid = self.engine.validate(move)
-        if self.engine.isPlayerOne:
-            self.playerOneMoveLabel.setText(moveString)
-            self.playerOneStatusLabel.setText(str(valid))
-        else:
-            self.playerTwoMoveLabel.setText(moveString)
-            self.playerTwoStatusLabel.setText(str(valid))
-
-    def init_map(self):
-        # Add positions to the map
         for x in range(self.engine.boardColumns):
             for y in range(self.engine.boardRows):
                 if x % 2 != 0 or y % 2 != 0:
@@ -182,6 +148,58 @@ class MainWindow(QMainWindow):
                     w.clicked.connect(self.board_clicked)
                     self.boardLayout.addWidget(w, y, x)
 
+        self.refresh()
+        self.show()
+
+    def get_move(self, moveString):
+        text = moveString.replace("(","").replace(")","").replace("'","").replace(" ","")
+        split = text.split(",")
+        if len(split) == 3:
+            split[1] = int(split[1])
+            split[2] = int(split[2])
+            return split
+        else:
+            return ("N",0,0)
+
+    def log_text(self, text):
+        self.movesText.append(text)
+
+    def playerOneAI_currentIndexChanged(self):
+        if self.playerOneAI.currentIndex() == 0:
+            self.playerOneAgent = None
+        elif self.playerOneAI.currentIndex() == 1:
+            self.playerOneAgent = simpleAgent.SimpleAgent()
+        self.refresh()
+
+    def playerOneConfirmButton_clicked(self):
+        if self.engine.winner == 0 and self.engine.isPlayerOne:
+            move = self.get_move(self.playerOneMoveLabel.text())
+            self.engine.make_move(move)
+            self.refresh()
+
+    def playerTwoAI_currentIndexChanged(self):
+        if self.playerTwoAI.currentIndex() == 0:
+            self.playerTwoAgent = None
+        elif self.playerTwoAI.currentIndex() == 1:
+            self.playerTwoAgent = simpleAgent.SimpleAgent()
+        self.refresh()
+
+    def playerTwoConfirmButton_clicked(self):
+        if self.engine.winner == 0 and not self.engine.isPlayerOne:
+            move = self.get_move(self.playerTwoMoveLabel.text())
+            self.engine.make_move(move)
+            self.refresh()
+
+    def set_player_move(self, moveString):
+        move = self.get_move(moveString)
+        valid = self.engine.validate(move)
+        if self.engine.isPlayerOne:
+            self.playerOneMoveLabel.setText(moveString)
+            self.playerOneStatusLabel.setText(str(valid))
+        else:
+            self.playerTwoMoveLabel.setText(moveString)
+            self.playerTwoStatusLabel.setText(str(valid))
+
     def refresh(self):
         if self.engine.winner > 0:
             self.log_text("Player " + str(self.engine.winner) + " won!")
@@ -193,6 +211,18 @@ class MainWindow(QMainWindow):
         else:
             self.playerOneBox.setStyleSheet("none")
             self.playerTwoBox.setStyleSheet("font-weight: bold")
+
+        self.playerOneStatusLabel.setText("")
+        self.playerOneMoveLabel.setText("")
+        self.playerTwoStatusLabel.setText("")
+        self.playerTwoMoveLabel.setText("") 
+
+        if self.engine.isPlayerOne and self.playerOneAgent is not None:
+            move = self.playerOneAgent.move(self.engine)
+            self.set_player_move(str(move))
+        elif not self.engine.isPlayerOne and self.playerTwoAgent is not None:
+            move = self.playerTwoAgent.move(self.engine)
+            self.set_player_move(str(move))
 
         for x in range(self.engine.boardColumns):
             for y in range(self.engine.boardRows):

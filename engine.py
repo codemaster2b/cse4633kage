@@ -67,7 +67,6 @@ class Engine:
             self.isPlayerOne = not self.isPlayerOne
 
     def is_kaged(self, position):
-        print("is_kaged")
         visitedNodes = []
         discoveredNodes = [position]
 
@@ -75,14 +74,12 @@ class Engine:
         while isKaged and len(discoveredNodes) > 0:
             node = discoveredNodes.pop(0)
             visitedNodes.append(node)
-            print("is_kaged " + str(node))
 
             leftWall = False
             x = node[0]
             y = node[1]
             while not leftWall and x > 0 and y > 0 and x < self.boardColumns and y < self.boardRows:
                 leftWall |= self.board[x-1][y] > 0
-                print("left wall " + str(leftWall) + " " + str(x-1) + " " + str(y))
                 x -= 2
 
             rightWall = False
@@ -90,7 +87,6 @@ class Engine:
             y = node[1]
             while not rightWall and x > 0 and y > 0 and x < self.boardColumns and y < self.boardRows:
                 rightWall |= self.board[x+1][y] > 0
-                print("right wall " + str(rightWall) + " " + str(x+1) + " " + str(y))
                 x += 2
 
             upWall = False
@@ -98,7 +94,6 @@ class Engine:
             y = node[1]
             while not upWall and x > 0 and y > 0 and x < self.boardColumns and y < self.boardRows:
                 upWall |= self.board[x][y-1] > 0
-                print("up wall " + str(upWall) + " " + str(x) + " " + str(y-1))
                 y += 2
 
             downWall = False
@@ -106,7 +101,6 @@ class Engine:
             y = node[1]
             while not downWall and x > 0 and y > 0 and x < self.boardColumns and y < self.boardRows:
                 downWall |= self.board[x][y+1] > 0
-                print("down wall " + str(downWall) + " " + str(x) + " " + str(y+1))
                 y += 2
             
             if leftWall and rightWall and upWall and downWall:
