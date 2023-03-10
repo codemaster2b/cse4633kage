@@ -21,7 +21,8 @@ class Engine:
         self.board[self.playerTwoKing[0]][self.playerTwoKing[1]] = 2
     
     def validate(self, move):
-        if type(move) != type([]) or len(move) != 3 or type(move[1]) != type(1) or type(move[2]) != type(1):
+        move = list(move)
+        if len(move) != 3 or type(move[1]) != type(1) or type(move[2]) != type(1):
             return False        
         elif move[0] == "W" and self.board[move[1]][move[2]] > 0:
             return False

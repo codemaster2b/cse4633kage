@@ -41,8 +41,8 @@ class MainWindow(QMainWindow):
         playerOneBoxLayout.addWidget(QLabel("STATUS"),2,0)
         playerOneBoxLayout.addWidget(self.playerOneStatusLabel,2,1)
 
-        playerOneAutoCheckBox = QCheckBox("AUTO")
-        playerOneBoxLayout.addWidget(playerOneAutoCheckBox,3,0)
+        self.playerOneAutoCheckBox = QCheckBox("AUTO")
+        playerOneBoxLayout.addWidget(self.playerOneAutoCheckBox,3,0)
         playerOneConfirmButton = QPushButton("CONFIRM")
         playerOneBoxLayout.addWidget(playerOneConfirmButton,3,1)
 
@@ -68,8 +68,8 @@ class MainWindow(QMainWindow):
         playerTwoBoxLayout.addWidget(QLabel("STATUS"),2,0)
         playerTwoBoxLayout.addWidget(self.playerTwoStatusLabel,2,1)
 
-        playerTwoAutoCheckBox = QCheckBox("AUTO")
-        playerTwoBoxLayout.addWidget(playerTwoAutoCheckBox,3,0)
+        self.playerTwoAutoCheckBox = QCheckBox("AUTO")
+        playerTwoBoxLayout.addWidget(self.playerTwoAutoCheckBox,3,0)
         playerTwoConfirmButton = QPushButton("CONFIRM")
         playerTwoBoxLayout.addWidget(playerTwoConfirmButton,3,1)
 
@@ -151,6 +151,11 @@ class MainWindow(QMainWindow):
         self.refresh()
         self.show()
 
+    def board_clicked(self):
+        pos = self.get_piece_at(self.sender().text)
+        #self.log_text(str(pos))
+        self.set_player_move(str(pos))
+
     def get_move(self, moveString):
         text = moveString.replace("(","").replace(")","").replace("'","").replace(" ","")
         split = text.split(",")
@@ -160,6 +165,18 @@ class MainWindow(QMainWindow):
             return split
         else:
             return ("N",0,0)
+
+    def get_piece_at(self, positionStr):
+        pos = positionStr.split(",")
+        y = int(pos[0])
+        x = int(pos[1])
+
+        piece = "K"
+        if x % 2 == 0 and y % 2 == 0:
+            piece = "No"
+        elif x % 2 == 0 or y % 2 == 0:
+            piece = "W"        
+        return piece, x, y
 
     def log_text(self, text):
         self.movesText.append(text)
@@ -217,12 +234,21 @@ class MainWindow(QMainWindow):
         self.playerTwoStatusLabel.setText("")
         self.playerTwoMoveLabel.setText("") 
 
-        if self.engine.isPlayerOne and self.playerOneAgent is not None:
-            move = self.playerOneAgent.move(self.engine)
-            self.set_player_move(str(move))
-        elif not self.engine.isPlayerOne and self.playerTwoAgent is not None:
-            move = self.playerTwoAgent.move(self.engine)
-            self.set_player_move(str(move))
+        if self.engine.winner == 0:
+            if self.engine.isPlayerOne and self.playerOneAgent is not None:
+                move = self.playerOneAgent.move(self.engine)
+                self.set_player_move(str(move))
+                if self.playerOneAutoCheckBox.isChecked():
+                    if self.engine.validate(move):
+                        self.engine.make_move(move)
+                        self.refresh()
+            elif not self.engine.isPlayerOne and self.playerTwoAgent is not None:
+                move = self.playerTwoAgent.move(self.engine)
+                self.set_player_move(str(move))
+                if self.playerTwoAutoCheckBox.isChecked():
+                    if self.engine.validate(move):
+                        self.engine.make_move(move)
+                        self.refresh()
 
         for x in range(self.engine.boardColumns):
             for y in range(self.engine.boardRows):
@@ -246,25 +272,6 @@ class MainWindow(QMainWindow):
                             w.setStyleSheet("background: green")
                         else:
                             w.setStyleSheet("background: black")
-
-
-    def board_clicked(self):
-        pos = self.get_piece_at(self.sender().text)
-        self.log_text(str(pos))
-        self.set_player_move(str(pos))
-
-    def get_piece_at(self, positionStr):
-        pos = positionStr.split(",")
-        y = int(pos[0])
-        x = int(pos[1])
-
-        piece = "K"
-        if x % 2 == 0 and y % 2 == 0:
-            piece = "No"
-        elif x % 2 == 0 or y % 2 == 0:
-            piece = "W"
-        
-        return piece, x, y
 
 if __name__ == '__main__':
     app = QApplication([])
